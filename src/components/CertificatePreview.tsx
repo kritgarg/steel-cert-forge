@@ -81,24 +81,26 @@ const CertificatePreview = ({ data }) => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-2 text-center text-xs">{data.rollNo || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.rollSize || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs font-bold">{data.material}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.C || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.MN || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.SI || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.S || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.P || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.CR || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.NI || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.MO || '-'}</td>
-                  <td className="border-r border-black p-2 text-center text-xs">{data.chemicalProperties.V || '-'}</td>
-                  <td className="p-2 text-center text-xs">{data.hardness}</td>
-                </tr>
-                {/* Empty rows for spacing */}
-                {[...Array(4)].map((_, index) => (
+                {data.items.map((item, index) => (
                   <tr key={index} className="border-b border-black">
+                    <td className="border-r border-black p-2 text-center text-xs">{item.rollNo || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.rollSize || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs font-bold">{item.material || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.C || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.MN || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.SI || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.S || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.P || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.CR || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.NI || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.MO || '-'}</td>
+                    <td className="border-r border-black p-2 text-center text-xs">{item.chemicalProperties.V || '-'}</td>
+                    <td className="p-2 text-center text-xs">{item.hardness || '-'}</td>
+                  </tr>
+                ))}
+                {/* Add empty rows if needed for spacing */}
+                {[...Array(Math.max(0, 5 - data.items.length))].map((_, index) => (
+                  <tr key={`empty-${index}`} className="border-b border-black">
                     <td className="border-r border-black p-2 text-xs">&nbsp;</td>
                     <td className="border-r border-black p-2 text-xs">&nbsp;</td>
                     <td className="border-r border-black p-2 text-xs">&nbsp;</td>
@@ -128,9 +130,9 @@ const CertificatePreview = ({ data }) => {
                 <div><span className="font-bold">DATE:</span> {format(data.date, 'dd/MM/yyyy')}</div>
               </div>
               <div className="space-y-2 text-xs">
-                <div><span className="font-bold">MATERIAL GRADE:</span> {data.material.toUpperCase()}</div>
+                <div><span className="font-bold">MATERIAL GRADE:</span> {data.items.length > 0 && data.items[0].material ? data.items[0].material.toUpperCase() : ''}</div>
                 <div><span className="font-bold">COLOUR CODE:</span> RED</div>
-                <div><span className="font-bold">{data.material.toUpperCase()}:</span> RED</div>
+                <div><span className="font-bold">{data.items.length > 0 && data.items[0].material ? data.items[0].material.toUpperCase() : ''}:</span> RED</div>
                 <div className="text-right mt-8 font-bold">C.S.CASTINGS PVT.LTD.</div>
                 <div className="text-right text-xs">AUTHORISED SIGNATORY</div>
               </div>

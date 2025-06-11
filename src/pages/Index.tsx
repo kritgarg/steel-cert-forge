@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download, FileText } from "lucide-react";
+import { CalendarIcon, Download, FileText, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -17,27 +17,29 @@ import { generatePDF } from "../utils/pdfGenerator";
 
 const Index = () => {
   const [formData, setFormData] = useState({
-    material: '',
-    chemicalProperties: {
-      C: '',
-      MN: '',
-      SI: '',
-      S: '',
-      P: '',
-      CR: '',
-      NI: '',
-      MO: '',
-      V: '',
-      MG: '',
-      CU: ''
-    },
-    hardness: '',
     date: new Date(),
     partyName: '',
     partyAddress: '',
     purchaseOrder: '',
-    rollNo: '',
-    rollSize: ''
+    items: [{
+      rollNo: '',
+      rollSize: '',
+      material: '',
+      chemicalProperties: {
+        C: '',
+        MN: '',
+        SI: '',
+        S: '',
+        P: '',
+        CR: '',
+        NI: '',
+        MO: '',
+        V: '',
+        MG: '',
+        CU: ''
+      },
+      hardness: ''
+    }]
   });
 
   const [showPreview, setShowPreview] = useState(false);
@@ -59,29 +61,79 @@ const Index = () => {
     }));
   };
 
-  const handleChemicalPropertyChange = (element, value) => {
+  const handleItemChange = (itemIndex, field, value) => {
     setFormData(prev => ({
       ...prev,
-      chemicalProperties: {
-        ...prev.chemicalProperties,
-        [element]: value
-      }
+      items: prev.items.map((item, index) => 
+        index === itemIndex ? { ...item, [field]: value } : item
+      )
     }));
   };
 
-  const validateForm = () => {
-    if (!formData.material) {
-      toast({ title: "Error", description: "Please select a material", variant: "destructive" });
-      return false;
+  const handleChemicalPropertyChange = (itemIndex, element, value) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, index) => 
+        index === itemIndex ? {
+          ...item,
+          chemicalProperties: {
+            ...item.chemicalProperties,
+            [element]: value
+          }
+        } : item
+      )
+    }));
+  };
+
+  const addItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, {
+        rollNo: '',
+        rollSize: '',
+        material: '',
+        chemicalProperties: {
+          C: '',
+          MN: '',
+          SI: '',
+          S: '',
+          P: '',
+          CR: '',
+          NI: '',
+          MO: '',
+          V: '',
+          MG: '',
+          CU: ''
+        },
+        hardness: ''
+      }]
+    }));
+  };
+
+  const removeItem = (itemIndex) => {
+    if (formData.items.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, index) => index !== itemIndex)
+      }));
     }
+  };
+
+  const validateForm = () => {
     if (!formData.partyName) {
       toast({ title: "Error", description: "Please enter party name", variant: "destructive" });
       return false;
     }
-    if (!formData.hardness) {
-      toast({ title: "Error", description: "Please enter hardness value", variant: "destructive" });
+    
+    const hasValidItem = formData.items.some(item => 
+      item.material && item.hardness
+    );
+    
+    if (!hasValidItem) {
+      toast({ title: "Error", description: "Please fill at least one complete item with material and hardness", variant: "destructive" });
       return false;
     }
+    
     return true;
   };
 
@@ -119,105 +171,6 @@ const Index = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-700 border-b pb-2">Basic Information</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="material">Material Type</Label>
-                    <Select value={formData.material} onValueChange={(value) => handleInputChange('material', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select material" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materialOptions.map(material => (
-                          <SelectItem key={material} value={material}>{material}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="hardness">Hardness</Label>
-                    <Input
-                      id="hardness"
-                      type="number"
-                      placeholder="e.g., 52-53"
-                      value={formData.hardness}
-                      onChange={(e) => handleInputChange('hardness', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="rollNo">Roll Number</Label>
-                    <Input
-                      id="rollNo"
-                      placeholder="e.g., 240"
-                      value={formData.rollNo}
-                      onChange={(e) => handleInputChange('rollNo', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="rollSize">Roll Size</Label>
-                    <Input
-                      id="rollSize"
-                      placeholder="e.g., 520X800/240X320/220X200"
-                      value={formData.rollSize}
-                      onChange={(e) => handleInputChange('rollSize', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Certificate Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !formData.date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={formData.date}
-                        onSelect={(date) => handleInputChange('date', date)}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              {/* Chemical Properties */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-700 border-b pb-2">Chemical Properties</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {chemicalElements.map(element => (
-                    <div key={element}>
-                      <Label htmlFor={element}>{element}</Label>
-                      <Input
-                        id={element}
-                        type="number"
-                        step="0.001"
-                        placeholder="0.000"
-                        value={formData.chemicalProperties[element]}
-                        onChange={(e) => handleChemicalPropertyChange(element, e.target.value)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Party Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-slate-700 border-b pb-2">Party Information</h3>
@@ -243,15 +196,146 @@ const Index = () => {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="purchaseOrder">Purchase Order Number</Label>
-                  <Input
-                    id="purchaseOrder"
-                    placeholder="Enter PO number"
-                    value={formData.purchaseOrder}
-                    onChange={(e) => handleInputChange('purchaseOrder', e.target.value)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="purchaseOrder">Purchase Order Number</Label>
+                    <Input
+                      id="purchaseOrder"
+                      placeholder="Enter PO number"
+                      value={formData.purchaseOrder}
+                      onChange={(e) => handleInputChange('purchaseOrder', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Certificate Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.date}
+                          onSelect={(date) => handleInputChange('date', date)}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
+              </div>
+
+              {/* Items Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-700 border-b pb-2">Material Items</h3>
+                  <Button
+                    onClick={addItem}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Item
+                  </Button>
+                </div>
+
+                {formData.items.map((item, itemIndex) => (
+                  <Card key={itemIndex} className="border-2 border-slate-200">
+                    <CardContent className="p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-slate-600">Item {itemIndex + 1}</h4>
+                        {formData.items.length > 1 && (
+                          <Button
+                            onClick={() => removeItem(itemIndex)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Basic Item Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Material Type</Label>
+                          <Select 
+                            value={item.material} 
+                            onValueChange={(value) => handleItemChange(itemIndex, 'material', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select material" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {materialOptions.map(material => (
+                                <SelectItem key={material} value={material}>{material}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>Hardness</Label>
+                          <Input
+                            type="number"
+                            placeholder="e.g., 52-53"
+                            value={item.hardness}
+                            onChange={(e) => handleItemChange(itemIndex, 'hardness', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Roll Number</Label>
+                          <Input
+                            placeholder="e.g., 240"
+                            value={item.rollNo}
+                            onChange={(e) => handleItemChange(itemIndex, 'rollNo', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Roll Size</Label>
+                          <Input
+                            placeholder="e.g., 520X800/240X320/220X200"
+                            value={item.rollSize}
+                            onChange={(e) => handleItemChange(itemIndex, 'rollSize', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Chemical Properties */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-slate-600">Chemical Properties</h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {chemicalElements.map(element => (
+                            <div key={element}>
+                              <Label>{element}</Label>
+                              <Input
+                                type="number"
+                                step="0.001"
+                                placeholder="0.000"
+                                value={item.chemicalProperties[element]}
+                                onChange={(e) => handleChemicalPropertyChange(itemIndex, element, e.target.value)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {/* Action Buttons */}
