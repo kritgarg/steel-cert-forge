@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download, FileText, Plus, Trash2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarIcon, Download, FileText, Plus, Trash2, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -21,25 +22,27 @@ const Index = () => {
     partyName: '',
     partyAddress: '',
     purchaseOrder: '',
-    items: [{
-      rollNo: '',
-      rollSize: '',
-      material: '',
-      chemicalProperties: {
-        C: '',
-        MN: '',
-        SI: '',
-        S: '',
-        P: '',
-        CR: '',
-        NI: '',
-        MO: '',
-        V: '',
-        MG: '',
-        CU: ''
-      },
-      hardness: ''
-    }]
+    items: []
+  });
+
+  const [currentItem, setCurrentItem] = useState({
+    rollNo: '',
+    rollSize: '',
+    material: '',
+    chemicalProperties: {
+      C: '',
+      MN: '',
+      SI: '',
+      S: '',
+      P: '',
+      CR: '',
+      NI: '',
+      MO: '',
+      V: '',
+      MG: '',
+      CU: ''
+    },
+    hardness: ''
   });
 
   const [showPreview, setShowPreview] = useState(false);
@@ -61,62 +64,73 @@ const Index = () => {
     }));
   };
 
-  const handleItemChange = (itemIndex, field, value) => {
-    setFormData(prev => ({
+  const handleCurrentItemChange = (field, value) => {
+    setCurrentItem(prev => ({
       ...prev,
-      items: prev.items.map((item, index) => 
-        index === itemIndex ? { ...item, [field]: value } : item
-      )
+      [field]: value
     }));
   };
 
-  const handleChemicalPropertyChange = (itemIndex, element, value) => {
-    setFormData(prev => ({
+  const handleChemicalPropertyChange = (element, value) => {
+    setCurrentItem(prev => ({
       ...prev,
-      items: prev.items.map((item, index) => 
-        index === itemIndex ? {
-          ...item,
-          chemicalProperties: {
-            ...item.chemicalProperties,
-            [element]: value
-          }
-        } : item
-      )
+      chemicalProperties: {
+        ...prev.chemicalProperties,
+        [element]: value
+      }
     }));
   };
 
-  const addItem = () => {
+  const resetCurrentItem = () => {
+    setCurrentItem({
+      rollNo: '',
+      rollSize: '',
+      material: '',
+      chemicalProperties: {
+        C: '',
+        MN: '',
+        SI: '',
+        S: '',
+        P: '',
+        CR: '',
+        NI: '',
+        MO: '',
+        V: '',
+        MG: '',
+        CU: ''
+      },
+      hardness: ''
+    });
+  };
+
+  const addCurrentItem = () => {
+    if (!currentItem.material) {
+      toast({ title: "Error", description: "Please select a material before adding", variant: "destructive" });
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, {
-        rollNo: '',
-        rollSize: '',
-        material: '',
-        chemicalProperties: {
-          C: '',
-          MN: '',
-          SI: '',
-          S: '',
-          P: '',
-          CR: '',
-          NI: '',
-          MO: '',
-          V: '',
-          MG: '',
-          CU: ''
-        },
-        hardness: ''
-      }]
+      items: [...prev.items, { ...currentItem }]
     }));
+
+    resetCurrentItem();
+    toast({ title: "Success", description: "Item added successfully!" });
   };
 
   const removeItem = (itemIndex) => {
-    if (formData.items.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.filter((_, index) => index !== itemIndex)
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, index) => index !== itemIndex)
+    }));
+    toast({ title: "Success", description: "Item removed successfully!" });
+  };
+
+  const editItem = (itemIndex) => {
+    const itemToEdit = formData.items[itemIndex];
+    setCurrentItem({ ...itemToEdit });
+    removeItem(itemIndex);
+    toast({ title: "Info", description: "Item loaded for editing" });
   };
 
   const validateForm = () => {
@@ -125,12 +139,8 @@ const Index = () => {
       return false;
     }
     
-    const hasValidItem = formData.items.some(item => 
-      item.material && item.hardness
-    );
-    
-    if (!hasValidItem) {
-      toast({ title: "Error", description: "Please fill at least one complete item with material and hardness", variant: "destructive" });
+    if (formData.items.length === 0) {
+      toast({ title: "Error", description: "Please add at least one item", variant: "destructive" });
       return false;
     }
     
@@ -236,113 +246,137 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Items Section */}
+              {/* Current Item Form */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-700 border-b pb-2">Material Items</h3>
-                  <Button
-                    onClick={addItem}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
+                <h3 className="font-semibold text-slate-700 border-b pb-2">Add Material Item</h3>
 
-                {formData.items.map((item, itemIndex) => (
-                  <Card key={itemIndex} className="border-2 border-slate-200">
-                    <CardContent className="p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-slate-600">Item {itemIndex + 1}</h4>
-                        {formData.items.length > 1 && (
-                          <Button
-                            onClick={() => removeItem(itemIndex)}
-                            variant="destructive"
-                            size="sm"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                <Card className="border-2 border-slate-200">
+                  <CardContent className="p-4 space-y-4">
+                    {/* Basic Item Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Material Type</Label>
+                        <Select 
+                          value={currentItem.material} 
+                          onValueChange={(value) => handleCurrentItemChange('material', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select material" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materialOptions.map(material => (
+                              <SelectItem key={material} value={material}>{material}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
-                      {/* Basic Item Information */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Material Type</Label>
-                          <Select 
-                            value={item.material} 
-                            onValueChange={(value) => handleItemChange(itemIndex, 'material', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select material" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {materialOptions.map(material => (
-                                <SelectItem key={material} value={material}>{material}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label>Hardness</Label>
-                          <Input
-                            type="number"
-                            placeholder="e.g., 52-53"
-                            value={item.hardness}
-                            onChange={(e) => handleItemChange(itemIndex, 'hardness', e.target.value)}
-                          />
-                        </div>
-
-                        <div>
-                          <Label>Roll Number</Label>
-                          <Input
-                            placeholder="e.g., 240"
-                            value={item.rollNo}
-                            onChange={(e) => handleItemChange(itemIndex, 'rollNo', e.target.value)}
-                          />
-                        </div>
-
-                        <div>
-                          <Label>Roll Size</Label>
-                          <Input
-                            placeholder="e.g., 520X800/240X320/220X200"
-                            value={item.rollSize}
-                            onChange={(e) => handleItemChange(itemIndex, 'rollSize', e.target.value)}
-                          />
-                        </div>
+                      <div>
+                        <Label>Hardness</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 52-53"
+                          value={currentItem.hardness}
+                          onChange={(e) => handleCurrentItemChange('hardness', e.target.value)}
+                        />
                       </div>
 
-                      {/* Chemical Properties */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-slate-600">Chemical Properties</h5>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {chemicalElements.map(element => (
-                            <div key={element}>
-                              <Label>{element}</Label>
-                              <Input
-                                type="number"
-                                step="0.001"
-                                placeholder="0.000"
-                                value={item.chemicalProperties[element]}
-                                onChange={(e) => handleChemicalPropertyChange(itemIndex, element, e.target.value)}
-                              />
-                            </div>
-                          ))}
-                        </div>
+                      <div>
+                        <Label>Roll Number</Label>
+                        <Input
+                          placeholder="e.g., 240"
+                          value={currentItem.rollNo}
+                          onChange={(e) => handleCurrentItemChange('rollNo', e.target.value)}
+                        />
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+
+                      <div>
+                        <Label>Roll Size</Label>
+                        <Input
+                          placeholder="e.g., 520X800/240X320/220X200"
+                          value={currentItem.rollSize}
+                          onChange={(e) => handleCurrentItemChange('rollSize', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Chemical Properties */}
+                    <div className="space-y-3">
+                      <h5 className="font-medium text-slate-600">Chemical Properties</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {chemicalElements.map(element => (
+                          <div key={element}>
+                            <Label>{element}</Label>
+                            <Input
+                              type="number"
+                              step="0.001"
+                              placeholder="0.000"
+                              value={currentItem.chemicalProperties[element]}
+                              onChange={(e) => handleChemicalPropertyChange(element, e.target.value)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={addCurrentItem}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Item to List
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Added Items List */}
+              {formData.items.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-slate-700 border-b pb-2">Added Items ({formData.items.length})</h3>
+                  <ScrollArea className="h-64 border rounded-md p-4">
+                    <div className="space-y-3">
+                      {formData.items.map((item, index) => (
+                        <Card key={index} className="border border-slate-300">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium text-slate-700">Item {index + 1}</h4>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => editItem(index)}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  onClick={() => removeItem(index)}
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="text-sm text-slate-600 space-y-1">
+                              <div><span className="font-medium">Material:</span> {item.material}</div>
+                              <div><span className="font-medium">Roll:</span> {item.rollNo} ({item.rollSize})</div>
+                              <div><span className="font-medium">Hardness:</span> {item.hardness}</div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button 
                   onClick={handleGenerateCertificate}
                   className="flex-1 bg-slate-800 hover:bg-slate-700"
+                  disabled={formData.items.length === 0}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   Generate Certificate
