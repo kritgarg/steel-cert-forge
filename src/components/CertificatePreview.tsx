@@ -62,65 +62,65 @@ const CertificatePreview = ({ data }) => {
               CHEMICAL PROPERTIES OF METALS
             </h3>
             
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-max">
+            <div className="w-full">
+              <table className="w-full border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-black">
-                    <th className="border-r border-black p-1 text-xs min-w-[60px]">ROLL NO</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[100px]">ROLL SIZE</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[80px]">Material</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">C</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">MN</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">SI</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">S</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">P</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">CR</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">NI</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">MO</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">V</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">MG</th>
-                    <th className="border-r border-black p-1 text-xs min-w-[50px]">CU</th>
-                    <th className="p-1 text-xs min-w-[70px]">HARDNESS</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[6%]">ROLL NO</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[10%]">ROLL SIZE</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[8%]">Material</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">C</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">MN</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">SI</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">S</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">P</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">CR</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">NI</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">MO</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">V</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">MG</th>
+                    <th className="border-r border-black p-0.5 text-[8px] w-[5%]">CU</th>
+                    <th className="p-0.5 text-[8px] w-[6%]">HARDNESS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((item, index) => (
                     <tr key={index} className="border-b border-black">
-                      <td className="border-r border-black p-1 text-center text-xs">{item.rollNo || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.rollSize || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs font-bold">{item.material || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.C || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.MN || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.SI || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.S || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.P || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.CR || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.NI || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.MO || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.V || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.MG || '-'}</td>
-                      <td className="border-r border-black p-1 text-center text-xs">{item.chemicalProperties.CU || '-'}</td>
-                      <td className="p-1 text-center text-xs">{item.hardness || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.rollNo || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.rollSize || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px] font-bold">{item.material || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.C || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.MN || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.SI || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.S || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.P || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.CR || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.NI || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.MO || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.V || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.MG || '-'}</td>
+                      <td className="border-r border-black p-0.5 text-center text-[7px]">{item.chemicalProperties.CU || '-'}</td>
+                      <td className="p-0.5 text-center text-[7px]">{item.hardness || '-'}</td>
                     </tr>
                   ))}
                   {/* Add empty rows if needed for spacing */}
                   {[...Array(Math.max(0, 5 - data.items.length))].map((_, index) => (
                     <tr key={`empty-${index}`} className="border-b border-black">
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="border-r border-black p-1 text-xs">&nbsp;</td>
-                      <td className="p-1 text-xs">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="border-r border-black p-0.5 text-[7px]">&nbsp;</td>
+                      <td className="p-0.5 text-[7px]">&nbsp;</td>
                     </tr>
                   ))}
                 </tbody>
