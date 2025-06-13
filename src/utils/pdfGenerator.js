@@ -1,6 +1,7 @@
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { format } from 'date-fns';
 
 export const generatePDF = async (formData) => {
   try {
@@ -36,10 +37,10 @@ export const generatePDF = async (formData) => {
     
     pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
     
-    // Generate filename from party name or use default
-    const filename = formData.partyName 
-      ? `Material_Certificate_${formData.partyName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
-      : 'Material_Certificate.pdf';
+    // Generate filename with party name and date
+    const dateStr = format(formData.date, 'dd-MM-yyyy');
+    const partyName = formData.partyName ? formData.partyName.replace(/[^a-zA-Z0-9]/g, '_') : 'Unknown_Party';
+    const filename = `${partyName}_${dateStr}.pdf`;
     
     pdf.save(filename);
   } catch (error) {

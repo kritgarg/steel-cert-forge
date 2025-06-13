@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, RotateCcw, FileText, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CalendarIcon, RotateCcw, FileText, Plus, Download } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -207,13 +207,29 @@ const Index = () => {
               <RotateCcw className="h-4 w-4" />
               Reset
             </Button>
-            <Button 
-              onClick={generateBill}
-              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600"
-            >
-              <FileText className="h-4 w-4" />
-              Generate Bill
-            </Button>
+            <Dialog open={showPreview} onOpenChange={setShowPreview}>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={generateBill}
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600"
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Certificate
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center justify-between">
+                    Certificate Preview
+                    <Button onClick={downloadPDF} className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  </DialogTitle>
+                </DialogHeader>
+                <CertificatePreview data={formData} />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
