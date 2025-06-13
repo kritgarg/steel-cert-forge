@@ -1,15 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarIcon, Download, FileText, Plus, Trash2, Edit } from "lucide-react";
+import { CalendarIcon, RotateCcw, FileText, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -22,13 +21,17 @@ const Index = () => {
     partyName: '',
     partyAddress: '',
     purchaseOrder: '',
+    invoiceNumber: '',
+    poDate: new Date(),
+    tcNumber: '',
     items: []
   });
 
   const [currentItem, setCurrentItem] = useState({
     rollNo: '',
     rollSize: '',
-    material: '',
+    gradeType: '',
+    color: '',
     chemicalProperties: {
       C: '',
       MN: '',
@@ -40,22 +43,24 @@ const Index = () => {
       MO: '',
       V: '',
       MG: '',
-      CU: ''
+      CU: '',
+      TI: ''
     },
     hardness: ''
   });
 
   const [showPreview, setShowPreview] = useState(false);
 
-  const materialOptions = [
+  // Refs for input navigation
+  const inputRefs = useRef({});
+
+  const gradeOptions = [
     'Adamite',
     'Accicular', 
     'Alloy',
     'Mild Steel',
     'Cast Iron'
   ];
-
-  const chemicalElements = ['C', 'MN', 'SI', 'S', 'P', 'CR', 'NI', 'MO', 'V', 'MG', 'CU'];
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -81,11 +86,31 @@ const Index = () => {
     }));
   };
 
-  const resetCurrentItem = () => {
+  const handleKeyPress = (event, nextField) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (nextField && inputRefs.current[nextField]) {
+        inputRefs.current[nextField].focus();
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      date: new Date(),
+      partyName: '',
+      partyAddress: '',
+      purchaseOrder: '',
+      invoiceNumber: '',
+      poDate: new Date(),
+      tcNumber: '',
+      items: []
+    });
     setCurrentItem({
       rollNo: '',
       rollSize: '',
-      material: '',
+      gradeType: '',
+      color: '',
       chemicalProperties: {
         C: '',
         MN: '',
@@ -97,15 +122,18 @@ const Index = () => {
         MO: '',
         V: '',
         MG: '',
-        CU: ''
+        CU: '',
+        TI: ''
       },
       hardness: ''
     });
+    setShowPreview(false);
+    toast({ title: "Success", description: "Form reset successfully!" });
   };
 
-  const addCurrentItem = () => {
-    if (!currentItem.material) {
-      toast({ title: "Error", description: "Please select a material before adding", variant: "destructive" });
+  const addItemToList = () => {
+    if (!currentItem.gradeType) {
+      toast({ title: "Error", description: "Please select a grade type before adding", variant: "destructive" });
       return;
     }
 
@@ -114,47 +142,48 @@ const Index = () => {
       items: [...prev.items, { ...currentItem }]
     }));
 
-    resetCurrentItem();
-    toast({ title: "Success", description: "Item added successfully!" });
+    // Reset current item
+    setCurrentItem({
+      rollNo: '',
+      rollSize: '',
+      gradeType: '',
+      color: '',
+      chemicalProperties: {
+        C: '',
+        MN: '',
+        SI: '',
+        S: '',
+        P: '',
+        CR: '',
+        NI: '',
+        MO: '',
+        V: '',
+        MG: '',
+        CU: '',
+        TI: ''
+      },
+      hardness: ''
+    });
+
+    toast({ title: "Success", description: "Item added to list!" });
   };
 
-  const removeItem = (itemIndex) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter((_, index) => index !== itemIndex)
-    }));
-    toast({ title: "Success", description: "Item removed successfully!" });
-  };
-
-  const editItem = (itemIndex) => {
-    const itemToEdit = formData.items[itemIndex];
-    setCurrentItem({ ...itemToEdit });
-    removeItem(itemIndex);
-    toast({ title: "Info", description: "Item loaded for editing" });
-  };
-
-  const validateForm = () => {
+  const generateBill = () => {
     if (!formData.partyName) {
       toast({ title: "Error", description: "Please enter party name", variant: "destructive" });
-      return false;
+      return;
     }
     
     if (formData.items.length === 0) {
       toast({ title: "Error", description: "Please add at least one item", variant: "destructive" });
-      return false;
+      return;
     }
     
-    return true;
+    setShowPreview(true);
+    toast({ title: "Success", description: "Certificate preview generated successfully!" });
   };
 
-  const handleGenerateCertificate = () => {
-    if (validateForm()) {
-      setShowPreview(true);
-      toast({ title: "Success", description: "Certificate preview generated successfully!" });
-    }
-  };
-
-  const handleDownloadPDF = async () => {
+  const downloadPDF = async () => {
     try {
       await generatePDF(formData);
       toast({ title: "Success", description: "PDF downloaded successfully!" });
@@ -164,253 +193,459 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">Material Certificate Generator</h1>
-          <p className="text-slate-600">Generate professional material certification documents</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 p-4">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <h1 className="text-2xl font-semibold text-gray-900">Material Certification</h1>
+          <div className="flex gap-3">
+            <Button 
+              onClick={resetForm}
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </Button>
+            <Button 
+              onClick={generateBill}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600"
+            >
+              <FileText className="h-4 w-4" />
+              Generate Bill
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Form Section */}
-          <Card className="shadow-lg">
-            <CardHeader className="bg-slate-800 text-white">
-              <CardTitle className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Basic Information */}
+          <Card>
+            <div className="bg-slate-700 text-white p-4 rounded-t-lg">
+              <h2 className="text-lg font-medium flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Certificate Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {/* Party Information */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-700 border-b pb-2">Party Information</h3>
-                
+                Basic Information
+              </h2>
+            </div>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Party Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  ref={el => inputRefs.current['partyName'] = el}
+                  placeholder="Enter party name"
+                  value={formData.partyName}
+                  onChange={(e) => handleInputChange('partyName', e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, 'partyAddress')}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Party Address</Label>
+                <Textarea
+                  ref={el => inputRefs.current['partyAddress'] = el}
+                  placeholder="Enter complete address"
+                  value={formData.partyAddress}
+                  onChange={(e) => handleInputChange('partyAddress', e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, 'purchaseOrder')}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Purchase Order</Label>
+                <Input
+                  ref={el => inputRefs.current['purchaseOrder'] = el}
+                  placeholder="e.g., POT23456"
+                  value={formData.purchaseOrder}
+                  onChange={(e) => handleInputChange('purchaseOrder', e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, 'invoiceNumber')}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Invoice Number</Label>
+                <Input
+                  ref={el => inputRefs.current['invoiceNumber'] = el}
+                  placeholder="e.g., INV123456"
+                  value={formData.invoiceNumber}
+                  onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, 'tcNumber')}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="partyName">Party Name</Label>
-                  <Input
-                    id="partyName"
-                    placeholder="Enter party name"
-                    value={formData.partyName}
-                    onChange={(e) => handleInputChange('partyName', e.target.value)}
-                  />
+                  <Label className="text-sm font-medium text-gray-700">PO Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal mt-1",
+                          !formData.poDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.poDate ? format(formData.poDate, "MMM do, yyyy") : "Pick date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.poDate}
+                        onSelect={(date) => handleInputChange('poDate', date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div>
-                  <Label htmlFor="partyAddress">Party Address</Label>
-                  <Textarea
-                    id="partyAddress"
-                    placeholder="Enter complete address"
-                    value={formData.partyAddress}
-                    onChange={(e) => handleInputChange('partyAddress', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="purchaseOrder">Purchase Order Number</Label>
-                    <Input
-                      id="purchaseOrder"
-                      placeholder="Enter PO number"
-                      value={formData.purchaseOrder}
-                      onChange={(e) => handleInputChange('purchaseOrder', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Certificate Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !formData.date && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.date}
-                          onSelect={(date) => handleInputChange('date', date)}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <Label className="text-sm font-medium text-gray-700">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal mt-1",
+                          !formData.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.date ? format(formData.date, "MMM do, yyyy") : "Pick date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.date}
+                        onSelect={(date) => handleInputChange('date', date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
-              {/* Current Item Form */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-700 border-b pb-2">Add Material Item</h3>
-
-                <Card className="border-2 border-slate-200">
-                  <CardContent className="p-4 space-y-4">
-                    {/* Basic Item Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Material Type</Label>
-                        <Select 
-                          value={currentItem.material} 
-                          onValueChange={(value) => handleCurrentItemChange('material', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select material" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {materialOptions.map(material => (
-                              <SelectItem key={material} value={material}>{material}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label>Hardness</Label>
-                        <Input
-                          type="number"
-                          placeholder="e.g., 52-53"
-                          value={currentItem.hardness}
-                          onChange={(e) => handleCurrentItemChange('hardness', e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label>Roll Number</Label>
-                        <Input
-                          placeholder="e.g., 240"
-                          value={currentItem.rollNo}
-                          onChange={(e) => handleCurrentItemChange('rollNo', e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label>Roll Size</Label>
-                        <Input
-                          placeholder="e.g., 520X800/240X320/220X200"
-                          value={currentItem.rollSize}
-                          onChange={(e) => handleCurrentItemChange('rollSize', e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Chemical Properties */}
-                    <div className="space-y-3">
-                      <h5 className="font-medium text-slate-600">Chemical Properties</h5>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {chemicalElements.map(element => (
-                          <div key={element}>
-                            <Label>{element}</Label>
-                            <Input
-                              type="number"
-                              step="0.001"
-                              placeholder="0.000"
-                              value={currentItem.chemicalProperties[element]}
-                              onChange={(e) => handleChemicalPropertyChange(element, e.target.value)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={addCurrentItem}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Item to List
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Added Items List */}
-              {formData.items.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-700 border-b pb-2">Added Items ({formData.items.length})</h3>
-                  <ScrollArea className="h-64 border rounded-md p-4">
-                    <div className="space-y-3">
-                      {formData.items.map((item, index) => (
-                        <Card key={index} className="border border-slate-300">
-                          <CardContent className="p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium text-slate-700">Item {index + 1}</h4>
-                              <div className="flex gap-2">
-                                <Button
-                                  onClick={() => editItem(index)}
-                                  variant="outline"
-                                  size="sm"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  onClick={() => removeItem(index)}
-                                  variant="destructive"
-                                  size="sm"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="text-sm text-slate-600 space-y-1">
-                              <div><span className="font-medium">Material:</span> {item.material}</div>
-                              <div><span className="font-medium">Roll:</span> {item.rollNo} ({item.rollSize})</div>
-                              <div><span className="font-medium">Hardness:</span> {item.hardness}</div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button 
-                  onClick={handleGenerateCertificate}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700"
-                  disabled={formData.items.length === 0}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Generate Certificate
-                </Button>
-                
-                {showPreview && (
-                  <Button 
-                    onClick={handleDownloadPDF}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </Button>
-                )}
+              <div>
+                <Label className="text-sm font-medium text-gray-700">T.C. Number</Label>
+                <Input
+                  ref={el => inputRefs.current['tcNumber'] = el}
+                  placeholder="CSCPL/13-06/25"
+                  value={formData.tcNumber}
+                  onChange={(e) => handleInputChange('tcNumber', e.target.value)}
+                  className="mt-1"
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Preview Section */}
-          <div className="space-y-4">
-            {showPreview ? (
-              <CertificatePreview data={formData} />
-            ) : (
-              <Card className="shadow-lg h-96 flex items-center justify-center">
-                <div className="text-center text-slate-500">
-                  <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p>Certificate preview will appear here</p>
-                  <p className="text-sm">Fill the form and click "Generate Certificate"</p>
+          {/* Material Details */}
+          <Card>
+            <div className="bg-slate-700 text-white p-4 rounded-t-lg">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Material Details
+              </h2>
+            </div>
+            <CardContent className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Grade Type</Label>
+                  <Select 
+                    value={currentItem.gradeType} 
+                    onValueChange={(value) => handleCurrentItemChange('gradeType', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select grade type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gradeOptions.map(grade => (
+                        <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </Card>
-            )}
-          </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Roll Number</Label>
+                  <Input
+                    ref={el => inputRefs.current['rollNumber'] = el}
+                    placeholder="Enter roll number"
+                    value={currentItem.rollNo}
+                    onChange={(e) => handleCurrentItemChange('rollNo', e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, 'rollSize')}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Roll Size</Label>
+                  <Input
+                    ref={el => inputRefs.current['rollSize'] = el}
+                    placeholder="e.g., 520X800/240X320"
+                    value={currentItem.rollSize}
+                    onChange={(e) => handleCurrentItemChange('rollSize', e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, 'hardness')}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Hardness</Label>
+                  <Input
+                    ref={el => inputRefs.current['hardness'] = el}
+                    placeholder="Enter hardness value"
+                    value={currentItem.hardness}
+                    onChange={(e) => handleCurrentItemChange('hardness', e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, 'color')}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Color</Label>
+                <Input
+                  ref={el => inputRefs.current['color'] = el}
+                  placeholder="Enter color"
+                  value={currentItem.color}
+                  onChange={(e) => handleCurrentItemChange('color', e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, 'C')}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-3 block">Chemical Properties</Label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">C</Label>
+                      <Input
+                        ref={el => inputRefs.current['C'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.C}
+                        onChange={(e) => handleChemicalPropertyChange('C', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'MN')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">MN</Label>
+                      <Input
+                        ref={el => inputRefs.current['MN'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.MN}
+                        onChange={(e) => handleChemicalPropertyChange('MN', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'SI')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">SI</Label>
+                      <Input
+                        ref={el => inputRefs.current['SI'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.SI}
+                        onChange={(e) => handleChemicalPropertyChange('SI', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'S')}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">S</Label>
+                      <Input
+                        ref={el => inputRefs.current['S'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.S}
+                        onChange={(e) => handleChemicalPropertyChange('S', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'P')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">P</Label>
+                      <Input
+                        ref={el => inputRefs.current['P'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.P}
+                        onChange={(e) => handleChemicalPropertyChange('P', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'CR')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">CR</Label>
+                      <Input
+                        ref={el => inputRefs.current['CR'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.CR}
+                        onChange={(e) => handleChemicalPropertyChange('CR', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'NI')}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">NI</Label>
+                      <Input
+                        ref={el => inputRefs.current['NI'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.NI}
+                        onChange={(e) => handleChemicalPropertyChange('NI', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'MO')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">MO</Label>
+                      <Input
+                        ref={el => inputRefs.current['MO'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.MO}
+                        onChange={(e) => handleChemicalPropertyChange('MO', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'V')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">V</Label>
+                      <Input
+                        ref={el => inputRefs.current['V'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.V}
+                        onChange={(e) => handleChemicalPropertyChange('V', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'MG')}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">MG</Label>
+                      <Input
+                        ref={el => inputRefs.current['MG'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.MG}
+                        onChange={(e) => handleChemicalPropertyChange('MG', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'CU')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">CU</Label>
+                      <Input
+                        ref={el => inputRefs.current['CU'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.CU}
+                        onChange={(e) => handleChemicalPropertyChange('CU', e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, 'TI')}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">TI</Label>
+                      <Input
+                        ref={el => inputRefs.current['TI'] = el}
+                        placeholder="0.000"
+                        value={currentItem.chemicalProperties.TI}
+                        onChange={(e) => handleChemicalPropertyChange('TI', e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={addItemToList}
+                className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Item to List
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Add Items Section */}
+          <Card>
+            <div className="bg-slate-700 text-white p-4 rounded-t-lg">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Add Items ({formData.items.length})
+              </h2>
+            </div>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Items Added</h3>
+                {formData.items.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500">No items added yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {formData.items.map((item, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 text-left">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900">Item {index + 1}</h4>
+                          <Button
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                items: prev.items.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <div><span className="font-medium">Grade:</span> {item.gradeType}</div>
+                          <div><span className="font-medium">Roll:</span> {item.rollNo} ({item.rollSize})</div>
+                          <div><span className="font-medium">Hardness:</span> {item.hardness}</div>
+                          <div><span className="font-medium">Color:</span> {item.color}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Preview Section */}
+        {showPreview && (
+          <div className="mt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Certificate Preview</h2>
+              <Button onClick={downloadPDF} className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Download PDF
+              </Button>
+            </div>
+            <CertificatePreview data={formData} />
+          </div>
+        )}
       </div>
     </div>
   );
