@@ -7,49 +7,50 @@ const CertificatePreview = ({ data }) => {
   return (
     <Card className="shadow-lg" id="certificate-preview">
       <CardContent className="p-0">
-        <div className="bg-white p-8 font-sans text-sm">
+        {/* A4 size: 210mm x 297mm - using precise dimensions */}
+        <div className="bg-white p-6 font-sans text-sm" style={{ width: '210mm', height: '297mm', minHeight: '297mm' }}>
           {/* Main Border */}
-          <div className="border-4 border-black p-6">
+          <div className="border-4 border-black p-4 h-full flex flex-col">
             
             {/* Header with Logo and Title */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="w-16 h-16 rounded-full border-2 border-gray-400 flex items-center justify-center bg-gray-100">
                 <div className="text-sm font-bold text-gray-600">CS</div>
               </div>
-              <h1 className="text-2xl font-bold text-center flex-1">Material Certificate</h1>
-              <div className="w-16"></div> {/* Spacer for balance */}
+              <h1 className="text-3xl font-bold text-center flex-1">Material Certificate</h1>
+              <div className="w-16"></div>
             </div>
 
             {/* Company and Party Information */}
-            <div className="grid grid-cols-2 gap-8 mb-6">
+            <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
-                <div className="font-bold mb-2">• COMPANY NAME - CS CASTINGS PVT. LTD.</div>
-                <div className="font-bold">• COMPANY ADDRESS- OPPO. POWER GRID, NEAR VILLAGE KUMBH, AMLOH ROAD, MANDI GOBINDGARH</div>
+                <div className="font-bold mb-2 text-sm">• COMPANY NAME - CS CASTINGS PVT. LTD.</div>
+                <div className="font-bold text-sm">• COMPANY ADDRESS- OPPO. POWER GRID, NEAR VILLAGE KUMBH, AMLOH ROAD, MANDI GOBINDGARH</div>
               </div>
               <div>
-                <div className="font-bold mb-2">• Party NAME - {data.partyName}</div>
-                <div className="font-bold">• Party ADDRESS- {data.partyAddress}</div>
+                <div className="font-bold mb-2 text-sm">• Party NAME - {data.partyName}</div>
+                <div className="font-bold text-sm">• Party ADDRESS- {data.partyAddress}</div>
               </div>
             </div>
 
             {/* Document Details */}
-            <div className="border-2 border-black p-4 mb-6">
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <div>T.C NO : {data.tcNumber || 'AUTO-GENERATED'}</div>
-                  <div>Invoice NO : {data.invoiceNumber || 'AUTO-GENERATED'}</div>
-                  <div>Po : {data.purchaseOrder}</div>
+            <div className="border-2 border-black p-3 mb-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <div className="text-sm">T.C NO : {data.tcNumber || 'AUTO-GENERATED'}</div>
+                  <div className="text-sm">Invoice NO : {data.invoiceNumber || 'AUTO-GENERATED'}</div>
+                  <div className="text-sm">Po : {data.purchaseOrder}</div>
                 </div>
-                <div className="space-y-2 text-right">
-                  <div>Date : {format(data.date, 'dd/MM/yy')}</div>
-                  <div>Date : {format(data.date, 'dd/MM/yy')}</div>
-                  <div>Date : {format(data.date, 'dd/MM/yy')}</div>
+                <div className="space-y-1 text-right">
+                  <div className="text-sm">Date : {format(data.date, 'dd/MM/yy')}</div>
+                  <div className="text-sm">Date : {format(data.date, 'dd/MM/yy')}</div>
+                  <div className="text-sm">Date : {format(data.date, 'dd/MM/yy')}</div>
                 </div>
               </div>
             </div>
 
             {/* First Table - Material Information */}
-            <div className="mb-6">
+            <div className="mb-4 flex-1">
               <table className="w-full border-collapse border-2 border-black">
                 <thead>
                   <tr>
@@ -72,8 +73,8 @@ const CertificatePreview = ({ data }) => {
                       <td className="border border-black p-2 text-center text-sm">{item.color || '-'}</td>
                     </tr>
                   ))}
-                  {/* Add empty rows if needed */}
-                  {[...Array(Math.max(0, 3 - data.items.length))].map((_, index) => (
+                  {/* Add more empty rows to fill the space */}
+                  {[...Array(Math.max(0, 8 - data.items.length))].map((_, index) => (
                     <tr key={`empty-${index}`}>
                       <td className="border border-black p-2 text-sm h-8">&nbsp;</td>
                       <td className="border border-black p-2 text-sm">&nbsp;</td>
@@ -88,7 +89,7 @@ const CertificatePreview = ({ data }) => {
             </div>
 
             {/* Second Table - Chemical Properties */}
-            <div className="mb-8">
+            <div className="mb-6">
               <table className="w-full border-collapse border-2 border-black">
                 <thead>
                   <tr>
@@ -125,8 +126,8 @@ const CertificatePreview = ({ data }) => {
                       <td className="border border-black p-1 text-center text-xs">{item.chemicalProperties.TI || '-'}</td>
                     </tr>
                   ))}
-                  {/* Add empty rows if needed */}
-                  {[...Array(Math.max(0, 3 - data.items.length))].map((_, index) => (
+                  {/* Add more empty rows for chemical properties */}
+                  {[...Array(Math.max(0, 8 - data.items.length))].map((_, index) => (
                     <tr key={`empty-${index}`}>
                       <td className="border border-black p-1 text-xs h-6">&nbsp;</td>
                       <td className="border border-black p-1 text-xs">&nbsp;</td>
@@ -148,7 +149,7 @@ const CertificatePreview = ({ data }) => {
             </div>
 
             {/* Footer Signature */}
-            <div className="text-right">
+            <div className="text-right mt-auto">
               <div className="text-lg font-bold">AUTHORISED SIGNATORY</div>
             </div>
 
